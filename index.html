@@ -54,17 +54,28 @@
 
             useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-            const sendMessage = async (e) => {
-                e.preventDefault();
-                if (!text.trim()) return;
+          const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!text.trim()) return;
 
-                const { error } = await _supabase.from('messages').insert([
-                    { display_name: user.name, pfp_url: user.pfp, content: text }
-                ]);
+    // We use bracket notation to be extremely explicit for the API
+    const payload = { 
+        "display_name": String(user.name), 
+        "pfp_url": String(user.pfp), 
+        "content": String(text) 
+    };
 
-                if (error) alert("Send Failed: " + error.message);
-                else setText('');
-            };
+    const { error } = await _supabase
+        .from('messages')
+        .insert([payload]);
+
+    if (error) {
+        console.error("Database Error Detail:", error);
+        alert("Send Error: " + error.message);
+    } else {
+        setText('');
+    }
+};
 
             const logout = () => { localStorage.clear(); window.location.reload(); };
 
