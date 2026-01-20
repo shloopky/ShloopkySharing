@@ -39,23 +39,16 @@
             const scrollRef = useRef();
 
             const fetchMsgs = async () => {
-                try {
-                    const { data, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true });
-                    if (error) throw error;
-                    setMessages(data || []);
-                } catch (err) {
-                    console.error("Database Error:", err.message);
-                }
+                const { data, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true });
+                if (!error) setMessages(data || []);
             };
 
             useEffect(() => {
                 if (!isJoined) return;
                 fetchMsgs();
-
                 const channel = _supabase.channel('global-chat')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchMsgs())
                     .subscribe();
-
                 return () => _supabase.removeChannel(channel);
             }, [isJoined]);
 
@@ -64,29 +57,45 @@
             const sendMessage = async (e) => {
                 e.preventDefault();
                 if (!text.trim()) return;
-                const newMsg = { display_name: user.name, pfp_url: user.pfp, content: text, reactions: {} };
-                await _supabase.from('messages').insert([newMsg]);
-                setText('');
+                const { error } = await _supabase.from('messages').insert([{ 
+                    display_name: user.name, 
+                    pfp_url: user.pfp, 
+                    content: text,
+                    reactions: {}
+                }]);
+                if (error) {
+                    alert("Error sending message: " + error.message + "\nDid you enable RLS policies?");
+                } else {
+                    setText('');
+                }
             };
 
-            const addReaction = async (msgId, emoji) => {
-                const msg = messages.find(m => m.id === msgId);
-                const reactions = { ...(msg.reactions || {}) };
-                reactions[emoji] = (reactions[emoji] || 0) + 1;
-                await _supabase.from('messages').update({ reactions }).eq('id', msgId);
+            const logout = () => {
+                localStorage.clear();
+                window.location.reload();
+            };
+
+            const changePfp = () => {
+                const newPfp = prompt("Enter new Image URL:", user.pfp);
+                if (newPfp) {
+                    const newUser = { ...user, pfp: newPfp };
+                    setUser(newUser);
+                    localStorage.setItem('chat_pfp', newPfp);
+                }
             };
 
             if (!isJoined) {
                 return (
                     <div className="flex items-center justify-center h-screen bg-[#1e1f22]">
-                        <div className="bg-[#313338] p-8 rounded-lg w-80 shadow-2xl">
-                            <h2 className="text-white font-bold mb-4 text-center">Set Display Name</h2>
-                            <input className="w-full p-2 mb-4 rounded bg-[#1e1f22] text-white border-none outline-none" 
+                        <div className="bg-[#313338] p-8 rounded-lg w-80 shadow-2xl border border-[#2b2d31]">
+                            <h2 className="text-white font-bold mb-4 text-center text-xl">Join Chat</h2>
+                            <input className="w-full p-2 mb-4 rounded bg-[#1e1f22] text-white outline-none" 
                                 placeholder="Username..." 
+                                value={user.name}
                                 onChange={e => setUser({...user, name: e.target.value})} />
-                            <button className="w-full bg-[#5865f2] p-2 rounded text-white font-bold hover:bg-[#4752c4]"
-                                onClick={() => { if(user.name) { localStorage.setItem('chat_name', user.name); setIsJoined(true); }}}>
-                                Join Chat
+                            <button className="w-full bg-[#5865f2] p-2 rounded text-white font-bold hover:bg-[#4752c4] transition"
+                                onClick={() => { if(user.name) { localStorage.setItem('chat_name', user.name); localStorage.setItem('chat_pfp', user.pfp); setIsJoined(true); }}}>
+                                Join
                             </button>
                         </div>
                     </div>
@@ -96,42 +105,49 @@
             return (
                 <div className="flex h-screen">
                     <div className="w-64 bg-[#2b2d31] flex flex-col p-4 border-r border-[#1e1f22]">
-                        <div className="font-bold text-white mb-4"># global-chat</div>
-                        <div className="flex-1"></div>
+                        <div className="font-bold text-white mb-4 flex justify-between items-center">
+                            <span># global-chat</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto text-xs text-gray-500">
+                            <p>Online: {user.name} (You)</p>
+                        </div>
+                        
                         {search === ADMIN_PASSWORD && (
-                            <button onClick={async () => await _supabase.from('messages').delete().neq('id', '0')} className="bg-red-600 text-white p-1 rounded text-xs mb-2">CLEAR ALL</button>
+                            <button onClick={async () => await _supabase.from('messages').delete().neq('id', '0')} 
+                                className="bg-red-600 text-white p-1 rounded text-xs mb-4 font-bold">CLEAR CHAT</button>
                         )}
-                        <div className="flex items-center gap-2 pt-2 border-t border-[#3f4147]">
-                            <img src={user.pfp} className="w-8 h-8 rounded-full bg-gray-600"/>
-                            <span className="text-white text-sm font-bold truncate">{user.name}</span>
+
+                        <div className="bg-[#232428] -mx-4 p-3 mt-auto flex items-center justify-between">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <img src={user.pfp} onClick={changePfp} className="w-8 h-8 rounded-full bg-gray-600 cursor-pointer hover:opacity-80 transition" title="Change PFP"/>
+                                <div className="leading-none overflow-hidden">
+                                    <div className="text-white text-sm font-bold truncate">{user.name}</div>
+                                    <div className="text-[10px] text-gray-400">Online</div>
+                                </div>
+                            </div>
+                            <button onClick={logout} className="text-gray-400 hover:text-white transition" title="Logout">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            </button>
                         </div>
                     </div>
 
                     <div className="flex-1 flex flex-col bg-[#313338]">
                         <header className="h-12 border-b border-[#26272d] flex items-center px-4 justify-between">
                             <span className="font-bold text-white"># global-chat</span>
-                            <input className="bg-[#1e1f22] text-xs p-1 px-2 rounded w-48 text-white outline-none" 
+                            <input className="bg-[#1e1f22] text-xs p-1 px-2 rounded w-48 text-white outline-none focus:w-64 transition-all" 
                                 placeholder="Search..." onChange={e => setSearch(e.target.value)} />
                         </header>
 
                         <main className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             {messages.filter(m => m.content.toLowerCase().includes(search.toLowerCase())).map(msg => (
-                                <div key={msg.id} className="flex gap-4 mb-4 hover:bg-[#2e3035] p-1 rounded group relative transition-colors">
+                                <div key={msg.id} className="flex gap-4 mb-4 hover:bg-[#2e3035] p-1 rounded transition-colors group relative">
                                     <img src={msg.pfp_url} className="w-10 h-10 rounded-full bg-gray-500 mt-1" />
                                     <div>
                                         <div className="flex gap-2 items-center">
-                                            <span className="text-white font-bold">{msg.display_name}</span>
-                                            <span className="text-[10px] text-gray-500">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                                            <span className="text-white font-bold hover:underline cursor-pointer">{msg.display_name}</span>
+                                            <span className="text-[10px] text-gray-500 uppercase font-semibold">{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                         </div>
-                                        <p className="text-[#dbdee1]">{msg.content}</p>
-                                        <div className="flex gap-1 mt-1">
-                                            {msg.reactions && Object.entries(msg.reactions).map(([emoji, count]) => (
-                                                <span key={emoji} onClick={() => addReaction(msg.id, emoji)} className="bg-[#2b2d31] px-1.5 py-0.5 rounded border border-[#1e1f22] text-xs cursor-pointer hover:border-[#5865f2] transition-all">{emoji} {count}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="hidden group-hover:flex absolute right-4 top-0 bg-[#2b2d31] border border-[#1e1f22] p-1 rounded shadow-lg gap-2">
-                                        {['🔥','😂','❤️','👍'].map(e => <button key={e} onClick={() => addReaction(msg.id, e)} className="hover:scale-125 transition-transform">{e}</button>)}
+                                        <p className="text-[#dbdee1] leading-relaxed">{msg.content}</p>
                                     </div>
                                 </div>
                             ))}
@@ -139,8 +155,8 @@
                         </main>
 
                         <form onSubmit={sendMessage} className="p-4">
-                            <input className="w-full bg-[#383a40] p-3 rounded-lg text-white outline-none focus:ring-1 focus:ring-[#5865f2]" 
-                                placeholder="Message #global-chat" 
+                            <input className="w-full bg-[#383a40] p-3 rounded-lg text-white outline-none focus:ring-1 focus:ring-[#5865f2] transition-all" 
+                                placeholder={`Message #global-chat`} 
                                 value={text} 
                                 onChange={e => setText(e.target.value)} />
                         </form>
