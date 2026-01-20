@@ -1,0 +1,21 @@
+/* Custom Frutiger Aero Glass Effect */
+.aero-glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
+              inset 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.glossy-button {
+  background: linear-gradient(180deg, #ffffff 0%, #d1d1d1 50%, #ebebeb 100%);
+  border: 1px solid #a1a1a1;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+body {
+  background: url('https://wallpaperaccess.com/full/2099351.jpg'); /* Classic FA Aurora/Grass */
+  background-attachment: fixed;
+  background-size: cover;
+}
