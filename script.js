@@ -1,93 +1,93 @@
+import { useState, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-// --- CONFIGURATION ---
-const SUPABASE_URL = 'https://gzwjqzyedpxlhgwknndl.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_r4jrV0e282f2TNc1QExFOQ_XuFxdHsC';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
-// --- DOM ELEMENTS ---
-const submitBtn = document.getElementById('submit-btn');
-const boardContainer = document.getElementById('board-container');
+export default function ChatApp() {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [user, setUser] = useState({ 
+    name: localStorage.getItem('chat_name') || '', 
+    pfp: localStorage.getItem('chat_pfp') || 'https://api.dicebear.com/7.x/bottts/svg?seed=default' 
+  });
+  const [isSetup, setIsSetup] = useState(!user.name);
+  const scrollRef = useRef();
 
-// --- FUNCTIONS ---
+  // Fetch initial messages and subscribe to changes
+  useEffect(() => {
+    fetchMessages();
+    const subscription = supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, 
+        (payload) => setMessages((prev) => [...prev, payload.new]))
+      .subscribe();
 
-// 1. Fetch and Display Threads
-async function loadThreads() {
-    boardContainer.innerHTML = '<div class="loading">Refreshing...</div>';
-    
-    // Get threads and join with their first post (simplified for MVP)
-    const { data: threads, error } = await supabase
-        .from('threads')
-        .select(`
-            *,
-            posts (content)
-        `)
-        .order('created_at', { ascending: false });
+    return () => supabase.removeChannel(subscription);
+  }, []);
 
-    if (error) {
-        console.error('Error:', error);
-        return;
-    }
+  const fetchMessages = async () => {
+    const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
+    setMessages(data || []);
+  };
 
-    renderBoard(threads);
-}
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    await supabase.from('messages').insert([{ 
+      display_name: user.name, 
+      pfp_url: user.pfp, 
+      content: newMessage 
+    }]);
+    setNewMessage('');
+  };
 
-function renderBoard(threads) {
-    boardContainer.innerHTML = ''; // Clear loading
+  const filteredMessages = messages.filter(m => 
+    m.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    threads.forEach(thread => {
-        // Find the "OP" post (usually the first one created)
-        const opContent = thread.posts.length > 0 ? thread.posts[0].content : 'No content';
-        
-        const threadDiv = document.createElement('div');
-        threadDiv.className = 'thread';
-        threadDiv.innerHTML = `
-            <div class="thread-header">
-                <span style="color:#005a9c; font-weight:bold;">Anonymous</span> 
-                <span>${new Date(thread.created_at).toLocaleString()}</span>
-                <span style="float:right">No. ${thread.id}</span>
+  if (isSetup) {
+    return (
+      <div className="setup-screen">
+        <h2>Choose a temporary identity</h2>
+        <input placeholder="Display Name" onChange={e => setUser({...user, name: e.target.value})} />
+        <input placeholder="PFP Image URL" onChange={e => setUser({...user, pfp: e.target.value})} />
+        <button onClick={() => { localStorage.setItem('chat_name', user.name); setIsSetup(false); }}>Join Chat</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="discord-theme">
+      <div className="sidebar"># global-chat</div>
+      <div className="main-chat">
+        <div className="header">
+          <input 
+            type="text" 
+            placeholder="Search messages..." 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+          />
+        </div>
+        <div className="message-list">
+          {filteredMessages.map((msg) => (
+            <div key={msg.id} className="message">
+              <img src={msg.pfp_url} alt="pfp" className="avatar" />
+              <div className="msg-content">
+                <span className="username">{msg.display_name}</span>
+                <p>{msg.content}</p>
+              </div>
             </div>
-            <div style="font-weight:bold; color:#0f3b5f; margin:5px 0;">${thread.subject || ''}</div>
-            <div class="post-content">${opContent}</div>
-        `;
-        boardContainer.appendChild(threadDiv);
-    });
+          ))}
+          <div ref={scrollRef} />
+        </div>
+        <form onSubmit={sendMessage} className="input-area">
+          <input 
+            value={newMessage} 
+            onChange={(e) => setNewMessage(e.target.value)} 
+            placeholder={`Message #global-chat`} 
+          />
+        </form>
+      </div>
+    </div>
+  );
 }
-
-// 2. Submit New Thread
-submitBtn.addEventListener('click', async () => {
-    const subject = document.getElementById('thread-subject').value;
-    const content = document.getElementById('thread-content').value;
-
-    if (!content) return alert("You can't post nothing!");
-
-    // Step A: Create Thread
-    const { data: threadData, error: threadError } = await supabase
-        .from('threads')
-        .insert([{ subject: subject, board: 'b' }])
-        .select();
-
-    if (threadError) return alert('Error creating thread');
-
-    const newThreadId = threadData[0].id;
-
-    // Step B: Create the OP Post
-    const { error: postError } = await supabase
-        .from('posts')
-        .insert([{ 
-            thread_id: newThreadId, 
-            content: content, 
-            is_op: true 
-        }]);
-
-    if (postError) {
-        alert('Error posting content');
-    } else {
-        // Clear inputs and reload
-        document.getElementById('thread-subject').value = '';
-        document.getElementById('thread-content').value = '';
-        loadThreads();
-    }
-});
-
-// Load on start
-loadThreads();
