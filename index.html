@@ -14,7 +14,6 @@
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #2b2d31; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e1f22; border-radius: 4px; }
-        .typing { font-style: italic; font-size: 12px; color: #b5bac1; padding: 4px 16px; }
     </style>
 </head>
 <body>
@@ -23,11 +22,8 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- CREDENTIALS ---
         const SB_URL = 'https://nrpiojdaltgfgswvhrys.supabase.co';
         const SB_KEY = 'sb_publishable_nu-if7EcpRJkKD9bXM97Rg__X3ELLW7';
-        
-        // Initialize Supabase correctly
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
         const ADMIN_PASSWORD = 'admin123'; 
 
@@ -35,69 +31,47 @@
             const [messages, setMessages] = useState([]);
             const [text, setText] = useState('');
             const [search, setSearch] = useState('');
-            const [typingUser, setTypingUser] = useState(null);
             const [user, setUser] = useState({ 
                 name: localStorage.getItem('chat_name') || '', 
-                pfp: localStorage.getItem('chat_pfp') || `https://api.dicebear.com/7.x/identicon/svg?seed=${Math.floor(Math.random() * 1000)}` 
+                pfp: localStorage.getItem('chat_pfp') || `https://api.dicebear.com/7.x/bottts/svg?seed=${Math.random()}` 
             });
             const [isJoined, setIsJoined] = useState(!!user.name);
             const scrollRef = useRef();
 
-            // Fetch and Realtime
+            const fetchMsgs = async () => {
+                try {
+                    const { data, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true });
+                    if (error) throw error;
+                    setMessages(data || []);
+                } catch (err) {
+                    console.error("Database Error:", err.message);
+                }
+            };
+
             useEffect(() => {
                 if (!isJoined) return;
-
-                const fetchMsgs = async () => {
-                    const { data, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true });
-                    if (!error) setMessages(data || []);
-                };
-
                 fetchMsgs();
 
-                // Listen for Messages AND Typing presence
-                const channel = _supabase.channel('global-chat', {
-                    config: { presence: { key: user.name } }
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-                    fetchMsgs();
-                })
-                .on('presence', { event: 'sync' }, () => {
-                    const state = channel.presenceState();
-                    const typers = Object.values(state).flat().filter(p => p.isTyping && p.user !== user.name);
-                    setTypingUser(typers.length > 0 ? typers[0].user : null);
-                })
-                .subscribe();
+                const channel = _supabase.channel('global-chat')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchMsgs())
+                    .subscribe();
 
                 return () => _supabase.removeChannel(channel);
             }, [isJoined]);
 
-            // Auto-scroll
-            useEffect(() => {
-                scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, [messages, typingUser]);
-
-            const handleTyping = (val) => {
-                setText(val);
-                _supabase.channel('global-chat').track({ user: user.name, isTyping: val.length > 0 });
-            };
+            useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
             const sendMessage = async (e) => {
                 e.preventDefault();
                 if (!text.trim()) return;
-                const { error } = await _supabase.from('messages').insert([{ 
-                    display_name: user.name, 
-                    pfp_url: user.pfp, 
-                    content: text,
-                    reactions: {}
-                }]);
-                if(error) console.error(error);
+                const newMsg = { display_name: user.name, pfp_url: user.pfp, content: text, reactions: {} };
+                await _supabase.from('messages').insert([newMsg]);
                 setText('');
-                _supabase.channel('global-chat').track({ user: user.name, isTyping: false });
             };
 
             const addReaction = async (msgId, emoji) => {
                 const msg = messages.find(m => m.id === msgId);
-                const reactions = msg.reactions || {};
+                const reactions = { ...(msg.reactions || {}) };
                 reactions[emoji] = (reactions[emoji] || 0) + 1;
                 await _supabase.from('messages').update({ reactions }).eq('id', msgId);
             };
@@ -105,14 +79,14 @@
             if (!isJoined) {
                 return (
                     <div className="flex items-center justify-center h-screen bg-[#1e1f22]">
-                        <div className="bg-[#313338] p-8 rounded-lg w-96">
-                            <h2 className="text-white text-xl font-bold mb-4">Set Identity</h2>
-                            <input className="w-full p-2 mb-4 rounded bg-[#1e1f22] text-white outline-none" 
-                                placeholder="Display Name" 
+                        <div className="bg-[#313338] p-8 rounded-lg w-80 shadow-2xl">
+                            <h2 className="text-white font-bold mb-4 text-center">Set Display Name</h2>
+                            <input className="w-full p-2 mb-4 rounded bg-[#1e1f22] text-white border-none outline-none" 
+                                placeholder="Username..." 
                                 onChange={e => setUser({...user, name: e.target.value})} />
-                            <button className="w-full bg-[#5865f2] p-2 rounded text-white font-bold"
+                            <button className="w-full bg-[#5865f2] p-2 rounded text-white font-bold hover:bg-[#4752c4]"
                                 onClick={() => { if(user.name) { localStorage.setItem('chat_name', user.name); setIsJoined(true); }}}>
-                                Join
+                                Join Chat
                             </button>
                         </div>
                     </div>
@@ -121,22 +95,20 @@
 
             return (
                 <div className="flex h-screen">
-                    {/* Sidebar */}
-                    <div className="w-64 bg-[#2b2d31] flex flex-col p-4">
+                    <div className="w-64 bg-[#2b2d31] flex flex-col p-4 border-r border-[#1e1f22]">
                         <div className="font-bold text-white mb-4"># global-chat</div>
-                        <div className="flex-1 text-sm text-gray-400">Welcome to the void.</div>
+                        <div className="flex-1"></div>
                         {search === ADMIN_PASSWORD && (
-                            <button onClick={async () => await _supabase.from('messages').delete().neq('id', '0')} className="bg-red-600 text-white p-1 rounded text-xs mb-2">CLEAR CHAT</button>
+                            <button onClick={async () => await _supabase.from('messages').delete().neq('id', '0')} className="bg-red-600 text-white p-1 rounded text-xs mb-2">CLEAR ALL</button>
                         )}
-                        <div className="flex items-center gap-2 border-t border-gray-700 pt-2">
+                        <div className="flex items-center gap-2 pt-2 border-t border-[#3f4147]">
                             <img src={user.pfp} className="w-8 h-8 rounded-full bg-gray-600"/>
                             <span className="text-white text-sm font-bold truncate">{user.name}</span>
                         </div>
                     </div>
 
-                    {/* Chat Section */}
                     <div className="flex-1 flex flex-col bg-[#313338]">
-                        <header className="h-12 border-b border-[#26272d] flex items-center px-4 justify-between shadow-sm">
+                        <header className="h-12 border-b border-[#26272d] flex items-center px-4 justify-between">
                             <span className="font-bold text-white"># global-chat</span>
                             <input className="bg-[#1e1f22] text-xs p-1 px-2 rounded w-48 text-white outline-none" 
                                 placeholder="Search..." onChange={e => setSearch(e.target.value)} />
@@ -144,35 +116,33 @@
 
                         <main className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             {messages.filter(m => m.content.toLowerCase().includes(search.toLowerCase())).map(msg => (
-                                <div key={msg.id} className="flex gap-4 mb-4 hover:bg-[#2e3035] p-1 rounded group relative">
+                                <div key={msg.id} className="flex gap-4 mb-4 hover:bg-[#2e3035] p-1 rounded group relative transition-colors">
                                     <img src={msg.pfp_url} className="w-10 h-10 rounded-full bg-gray-500 mt-1" />
                                     <div>
                                         <div className="flex gap-2 items-center">
                                             <span className="text-white font-bold">{msg.display_name}</span>
-                                            <span className="text-[10px] text-gray-500 uppercase">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                                            <span className="text-[10px] text-gray-500">{new Date(msg.created_at).toLocaleTimeString()}</span>
                                         </div>
                                         <p className="text-[#dbdee1]">{msg.content}</p>
                                         <div className="flex gap-1 mt-1">
                                             {msg.reactions && Object.entries(msg.reactions).map(([emoji, count]) => (
-                                                <span key={emoji} onClick={() => addReaction(msg.id, emoji)} className="bg-[#2b2d31] px-1 rounded border border-[#1e1f22] text-xs cursor-pointer">{emoji} {count}</span>
+                                                <span key={emoji} onClick={() => addReaction(msg.id, emoji)} className="bg-[#2b2d31] px-1.5 py-0.5 rounded border border-[#1e1f22] text-xs cursor-pointer hover:border-[#5865f2] transition-all">{emoji} {count}</span>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="hidden group-hover:flex absolute right-2 top-0 bg-[#313338] border border-black p-1 rounded gap-2">
-                                        {['🔥','😂','❤️'].map(e => <button key={e} onClick={() => addReaction(msg.id, e)}>{e}</button>)}
+                                    <div className="hidden group-hover:flex absolute right-4 top-0 bg-[#2b2d31] border border-[#1e1f22] p-1 rounded shadow-lg gap-2">
+                                        {['🔥','😂','❤️','👍'].map(e => <button key={e} onClick={() => addReaction(msg.id, e)} className="hover:scale-125 transition-transform">{e}</button>)}
                                     </div>
                                 </div>
                             ))}
                             <div ref={scrollRef} />
                         </main>
 
-                        {typingUser && <div className="typing">{typingUser} is typing...</div>}
-
                         <form onSubmit={sendMessage} className="p-4">
-                            <input className="w-full bg-[#383a40] p-3 rounded-lg text-white outline-none" 
+                            <input className="w-full bg-[#383a40] p-3 rounded-lg text-white outline-none focus:ring-1 focus:ring-[#5865f2]" 
                                 placeholder="Message #global-chat" 
                                 value={text} 
-                                onChange={e => handleTyping(e.target.value)} />
+                                onChange={e => setText(e.target.value)} />
                         </form>
                     </div>
                 </div>
