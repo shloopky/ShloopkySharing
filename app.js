@@ -6,9 +6,9 @@ import { User, LogOut, Send, Hash, MessageSquare, UserCircle } from 'lucide-reac
 
 // Supabase configuration placeholder
 
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_URL = 'https://nrpiojdaltgfgswvhrys.supabase.coL';
 
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_ANON_KEY = 'sb_publishable_nu-if7EcpRJkKD9bXM97Rg__X3ELLW7';
 
 
 
