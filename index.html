@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shloopky - Your Gaming Hub</title>
+    <title>AeroStream Live</title>
     <style>
         * {
             margin: 0;
@@ -13,291 +13,214 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Loading Screen */
-        #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        #loader.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loader-logo {
-            font-size: 4rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, #fff, #a8edea, #fed6e3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: pulse 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(255,255,255,0.5));
-        }
-
-        .loader-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-top: 30px;
-        }
-
-        .loader-text {
-            color: white;
-            margin-top: 20px;
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        /* Aurora Background Effect */
-        .aurora {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.6;
-        }
-
-        .aurora-gradient {
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at center, rgba(168, 237, 234, 0.3) 0%, transparent 50%);
-            animation: aurora 15s ease-in-out infinite;
-        }
-
-        @keyframes aurora {
-            0%, 100% { transform: translate(-25%, -25%) rotate(0deg); }
-            33% { transform: translate(-30%, -20%) rotate(120deg); }
-            66% { transform: translate(-20%, -30%) rotate(240deg); }
-        }
-
-        /* Header */
-        header {
-            position: relative;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 20px 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            max-width: 1200px;
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 0 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .logo {
-            font-size: 2.5rem;
+            font-size: 28px;
             font-weight: bold;
-            background: linear-gradient(45deg, #fff, #a8edea);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
-        }
-
-        nav {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
             display: flex;
-            gap: 15px;
+            align-items: center;
+            gap: 10px;
         }
 
-        .nav-btn {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            font-size: 1rem;
-            text-decoration: none;
+        .logo::before {
+            content: "▶";
+            font-size: 32px;
         }
 
-        .nav-btn:hover {
+        .username-display {
             background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
-        }
-
-        /* Main Container */
-        .container {
-            position: relative;
-            z-index: 10;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 60px 40px;
-            margin-bottom: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            animation: fadeIn 1s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            color: white;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 2px 10px rgba(0,0,0,0.2));
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 30px;
-        }
-
-        .hero-btn {
-            display: inline-block;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border: none;
-            border-radius: 30px;
-            color: #764ba2;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .hero-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Games Grid */
-        .games-section {
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            color: white;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 2px 10px rgba(0,0,0,0.2));
-        }
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .game-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            padding: 10px 20px;
             border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            animation: fadeIn 0.5s ease-out;
+            color: white;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
         }
 
-        .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.2);
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 0;
+            height: calc(100vh - 140px);
         }
 
-        .game-icon {
-            width: 100%;
-            height: 180px;
-            background: linear-gradient(135deg, rgba(168, 237, 234, 0.3), rgba(254, 214, 227, 0.3));
+        .stream-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-container {
+            flex: 1;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .game-title {
-            font-size: 1.4rem;
-            color: white;
-            margin-bottom: 10px;
+        .video-placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .admin-controls {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            gap: 10px;
+        }
+
+        .admin-controls.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
-        }
-
-        .game-description {
-            font-size: 0.95rem;
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
-        }
-
-        .play-btn {
-            margin-top: 15px;
-            padding: 10px 25px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            color: white;
-            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .play-btn:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(1.05);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
-        /* Game Modal */
-        .game-modal {
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+            color: #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-section {
+            background: linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 100%);
+            display: flex;
+            flex-direction: column;
+            border-left: 3px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-user {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .message-text {
+            color: #333;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #4facfe;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal {
             display: none;
             position: fixed;
             top: 0;
@@ -307,162 +230,354 @@
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
             z-index: 1000;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
         }
 
-        .game-modal.active {
+        .modal.active {
             display: flex;
         }
 
         .modal-content {
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
+            padding: 40px;
             border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 400px;
             width: 90%;
-            max-width: 1000px;
-            height: 90%;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlide 0.3s ease;
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 30px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 20px 20px 0 0;
-            color: white;
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .close-btn {
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1.5rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .input-group {
+            margin-bottom: 20px;
         }
 
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.5);
-            transform: rotate(90deg);
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
         }
 
-        .modal-body {
-            flex: 1;
-            padding: 0;
-            overflow: hidden;
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        #game-frame {
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .jumpscare {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            border: none;
+            background: black;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Footer */
-        footer {
-            position: relative;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.15);
+        .jumpscare.active {
+            display: flex;
+        }
+
+        .jumpscare img {
+            max-width: 100%;
+            max-height: 100%;
+            animation: scream 0.1s infinite;
+        }
+
+        @keyframes scream {
+            0%, 100% { transform: translate(0, 0) scale(1.1); }
+            25% { transform: translate(-10px, 10px) scale(1.15); }
+            75% { transform: translate(10px, -10px) scale(1.15); }
+        }
+
+        .viewer-count {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 30px 0;
-            margin-top: 60px;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .logo {
-                font-size: 1.8rem;
-            }
-            
-            .games-grid {
+        .viewer-count::before {
+            content: "👁";
+            font-size: 18px;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
                 grid-template-columns: 1fr;
+            }
+            
+            .chat-section {
+                border-left: none;
+                border-top: 3px solid rgba(255, 255, 255, 0.5);
             }
         }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loader">
-        <div class="loader-logo">SHLOOPKY</div>
-        <div class="loader-spinner"></div>
-        <div class="loader-text">Loading your games...</div>
-    </div>
-
-    <!-- Aurora Effect -->
-    <div class="aurora">
-        <div class="aurora-gradient"></div>
-    </div>
-
-    <!-- Header -->
-    <header>
-        <div class="header-content">
-            <div class="logo">SHLOOPKY</div>
-            <nav>
-                <a href="#" class="nav-btn">Home</a>
-                <a href="#games" class="nav-btn">Games</a>
-                <a href="#" class="nav-btn">About</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Hero Section -->
-        <div class="hero">
-            <h1>Welcome to Shloopky! 🎮</h1>
-            <p>Your ultimate gaming destination with endless fun!</p>
-            <button class="hero-btn" onclick="document.getElementById('games').scrollIntoView({behavior: 'smooth'})">
-                Start Playing
-            </button>
-        </div>
-
-        <!-- Games Section -->
-        <div class="games-section" id="games">
-            <h2 class="section-title">🎯 Featured Games</h2>
-            <div class="games-grid" id="games-container">
-                <!-- Games will be loaded here by script.js -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Game Modal -->
-    <div class="game-modal" id="game-modal">
+    <div class="modal active" id="loginModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title" id="modal-game-title">Game</div>
-                <button class="close-btn" onclick="closeGame()">×</button>
+            <div class="modal-title">🌊 Join AeroStream</div>
+            <div class="input-group">
+                <label for="usernameInput">Choose a Username</label>
+                <input type="text" id="usernameInput" placeholder="Enter username..." maxlength="20">
             </div>
-            <div class="modal-body">
-                <iframe id="game-frame" src=""></iframe>
+            <div class="input-group">
+                <label for="passwordInput">Password (optional for streaming)</label>
+                <input type="password" id="passwordInput" placeholder="Enter password...">
+            </div>
+            <button class="btn btn-primary" onclick="login()" style="width: 100%;">Join Stream</button>
+            <p id="errorMsg" style="color: #f5576c; margin-top: 10px; display: none;"></p>
+        </div>
+    </div>
+
+    <div class="jumpscare" id="jumpscare">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect fill='%23ff0000' width='800' height='800'/%3E%3Ctext x='400' y='400' font-size='200' text-anchor='middle' dominant-baseline='middle' fill='white'%3E👻%3C/text%3E%3Ctext x='400' y='550' font-size='60' text-anchor='middle' fill='white' font-weight='bold'%3EBOO!%3C/text%3E%3C/svg%3E" alt="Jumpscare">
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">AeroStream Live</div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="viewer-count" id="viewerCount">0 viewers</div>
+                <div class="username-display" id="usernameDisplay"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="stream-section">
+                <div class="video-container" id="videoContainer">
+                    <div class="video-placeholder">
+                        🎥 Stream is currently offline<br><br>
+                        <small>Waiting for the streamer to go live...</small>
+                    </div>
+                </div>
+
+                <div class="admin-controls" id="adminControls">
+                    <button class="btn btn-primary" onclick="startStream()">📹 Start Streaming</button>
+                    <button class="btn btn-danger" onclick="stopStream()">⏹ Stop Stream</button>
+                    <button class="btn btn-warning" onclick="triggerJumpscare()">👻 JUMPSCARE!</button>
+                </div>
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-header">💬 Live Chat</div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Send a message..." maxlength="200">
+                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2025 Shloopky Gaming Hub | Made with 💜</p>
-        <p>Add your HTML games to the /games folder!</p>
-    </footer>
+    <script>
+        const SECRET_USERNAME = 'StreamMaster2025';
+        const SECRET_PASSWORD = 'LiveStream2025!';
+        
+        let currentUsername = '';
+        let isAdmin = false;
+        let usedUsernames = new Set();
+        let isStreaming = false;
+        let mediaStream = null;
+        let viewerCount = 0;
 
-    <script src="script.js"></script>
+        function login() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!username) {
+                errorMsg.textContent = 'Please enter a username!';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (usedUsernames.has(username.toLowerCase())) {
+                errorMsg.textContent = 'Username already taken!';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Check for admin credentials
+            if (username === SECRET_USERNAME && password === SECRET_PASSWORD) {
+                isAdmin = true;
+                currentUsername = username + ' (ADMIN)';
+                document.getElementById('adminControls').classList.add('active');
+            } else {
+                currentUsername = username;
+            }
+
+            usedUsernames.add(username.toLowerCase());
+            document.getElementById('usernameDisplay').textContent = currentUsername;
+            document.getElementById('loginModal').classList.remove('active');
+            
+            addSystemMessage(`${username} joined the stream!`);
+            updateViewerCount();
+        }
+
+        async function startStream() {
+            if (isStreaming) return;
+
+            try {
+                // Request screen capture with audio
+                mediaStream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: {
+                        cursor: "always"
+                    }, 
+                    audio: true 
+                });
+
+                const videoContainer = document.getElementById('videoContainer');
+                videoContainer.innerHTML = '<video id="streamVideo" autoplay muted></video>';
+                
+                const video = document.getElementById('streamVideo');
+                video.srcObject = mediaStream;
+                
+                isStreaming = true;
+                addSystemMessage('🔴 Stream is now LIVE!');
+
+                // Detect when user stops sharing via browser UI
+                mediaStream.getVideoTracks()[0].onended = () => {
+                    stopStream();
+                };
+            } catch (error) {
+                alert('Screen sharing was cancelled or not available.');
+                console.error(error);
+            }
+        }
+
+        function stopStream() {
+            if (!isStreaming) return;
+
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+
+            const videoContainer = document.getElementById('videoContainer');
+            videoContainer.innerHTML = `
+                <div class="video-placeholder">
+                    🎥 Stream is currently offline<br><br>
+                    <small>Waiting for the streamer to go live...</small>
+                </div>
+            `;
+
+            isStreaming = false;
+            addSystemMessage('⚫ Stream has ended');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addChatMessage(currentUsername, message);
+            input.value = '';
+        }
+
+        function addChatMessage(username, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <div class="message-user">${username}</div>
+                <div class="message-text">${escapeHtml(message)}</div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addSystemMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.background = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+            messageDiv.style.color = 'white';
+            messageDiv.innerHTML = `<div class="message-text" style="color: white; font-weight: 600;">${message}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function triggerJumpscare() {
+            const jumpscare = document.getElementById('jumpscare');
+            jumpscare.classList.add('active');
+            
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZijcIGGS57OehUBELTKXh8K1hGwU7k9n0yHkpBSd+y/DajD4JFF23694') || new Audio();
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+            
+            setTimeout(() => {
+                jumpscare.classList.remove('active');
+            }, 2000);
+
+            addSystemMessage('👻 JUMPSCARE activated!');
+        }
+
+        function updateViewerCount() {
+            viewerCount = usedUsernames.size;
+            document.getElementById('viewerCount').textContent = `${viewerCount} viewer${viewerCount !== 1 ? 's' : ''}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enter key to send message
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Enter key to login
+        document.getElementById('usernameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    </script>
 </body>
 </html>
